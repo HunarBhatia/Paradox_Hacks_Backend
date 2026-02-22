@@ -111,11 +111,11 @@ class PortfolioView(APIView):
         total_current = Decimal('0')
 
         for pos in positions:
-            current_price = get_price(pos.ticker)
-            if not current_price:
+            price_data = get_price(pos.ticker)
+            if not price_data:
                 continue
 
-            current_price = Decimal(str(current_price))
+            current_price = Decimal(str(price_data['price']))
             invested = (pos.avg_buy_price * pos.quantity).quantize(Decimal('0.01'))
             current_value = (current_price * pos.quantity).quantize(Decimal('0.01'))
             pnl = (current_value - invested).quantize(Decimal('0.01'))
@@ -168,7 +168,8 @@ class PendingOrdersView(APIView):
         orders = Order.objects.filter(user=request.user, status='PENDING')
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
-    
+
+
 class PnlHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 

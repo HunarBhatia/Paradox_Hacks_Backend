@@ -81,6 +81,14 @@ ALLOWED_TOPICS = [
     "rupee", "economy", "gdp", "inflation", "interest rate", "rbi", "sebi",
     "what is", "how does", "explain", "tell me about", "help me understand",
     "how to", "why", "when", "which", "how much", "difference between",
+    "best", "good", "recommend", "should i", "top", "growth", "company",
+    "etf", "fund", "bond", "debt", "asset", "wealth", "capital", "income",
+]
+
+GROQ_MODELS = [
+    "llama-3.3-70b-versatile",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
 ]
 
 
@@ -98,9 +106,12 @@ from services.price_service import get_price
 
 
 def get_stock_price(ticker: str) -> str:
-    data = get_price(ticker)
-    if data:
-        return f"{ticker}: ₹{data['price']} | Change: {data['change_percent']}% | Source: {data['source']}"
+    try:
+        data = get_price(ticker)
+        if data and isinstance(data, dict) and 'price' in data:
+            return f"{ticker}: ₹{data['price']} | Change: {data['change_percent']}% | Source: {data['source']}"
+    except Exception:
+        pass
     return f"Could not fetch live price for {ticker} right now."
 
 
@@ -129,10 +140,9 @@ def get_chatbot_response(user_message: str, history: list = None) -> dict:
         }
 
     # Layer 2 — Block clearly off-topic messages
-    # Only apply this check if message is longer than 3 words
-    # (short greetings like "hi" or "hello" should pass through)
+    # Only apply for messages longer than 4 words (allows greetings like "hi", "what is ipo")
     words = user_message.strip().split()
-    if len(words) > 3 and not is_finance_related(user_message):
+    if len(words) > 4 and not is_finance_related(user_message):
         rejection = "I'm FinBot — your finance and investing guide! I can only help with stock markets, trading, and investing topics. What would you like to learn about finance today?"
         return {
             "response": rejection,
@@ -157,13 +167,34 @@ def get_chatbot_response(user_message: str, history: list = None) -> dict:
 
     messages.append({"role": "user", "content": enriched_message})
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=messages,
-        temperature=0.7,
-    )
+    # Layer 3 — Call Groq with fallback models
+    response_text = None
+    last_error = None
 
-    response_text = response.choices[0].message.content
+    for model in GROQ_MODELS:
+        try:
+            print(f"[FinBot] Trying model: {model}")
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            response_text = response.choices[0].message.content
+            print(f"[FinBot] Success with model: {model}")
+            break
+        except Exception as e:
+            last_error = e
+            print(f"[FinBot] Error with model {model}: {e}")
+            continue
+
+    if response_text is None:
+        error_msg = str(last_error)[:200] if last_error else "Unknown error"
+        print(f"[FinBot] All models failed. Last error: {error_msg}")
+        return {
+            "response": f"I'm having trouble connecting right now. Please try again in a moment!",
+            "history": history,
+        }
 
     updated_history = history + [
         {"role": "user", "content": user_message},
