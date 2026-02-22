@@ -159,6 +159,7 @@ CELERY_BEAT_SCHEDULE = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
+    "paradox-hacks-backend.railway.internal",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
