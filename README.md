@@ -21,13 +21,6 @@ Built as a hackathon project in 48 hours. Fully deployed and production-ready.
 
 ---
 
-## 🚀 Live Demo
-
-- **Frontend:** [https://stockwise.netlify.app](https://stockwise.netlify.app)
-- **Backend API:** [https://stockwise-backend.railway.app](https://stockwise-backend.railway.app)
-
----
-
 ## ✨ Features
 
 ### 🔐 Authentication & Wallets
@@ -69,7 +62,7 @@ Built as a hackathon project in 48 hours. Fully deployed and production-ready.
 - Automatic model fallback — if primary model fails, system tries backup models automatically
 - FinBot refuses to discuss anything outside finance, markets, and investing — no exceptions
 
-### 🧠 ML Trading Insights
+### 🧠 Trading Insights
 - Post-trade behavioral analysis triggered automatically after every completed trade
 - Analyzes trading patterns including:
   - **Win rate** and confidence intervals
